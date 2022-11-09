@@ -1,4 +1,5 @@
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.buildFeatures.perfmon
 import jetbrains.buildServer.configs.kotlin.buildSteps.maven
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 
@@ -24,26 +25,19 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 'Debug' option is available in the context menu for the task.
 */
 
-version = "2022.04"
+version = "2022.10"
 
 project {
+    description = "netology homeworks"
 
-    buildType(BuildPlainDoll)
-
-    params {
-        text("cat2", "Zirael", readOnly = true, allowEmpty = true)
-    }
+    buildType(Build)
 }
 
-object BuildPlainDoll : BuildType({
-    name = "Build PlainDoll"
+object Build : BuildType({
+    name = "Build"
+    description = "Build netology maven"
 
     artifactRules = "target/*.jar => target"
-
-    params {
-        text("name", "alexey", allowEmpty = true)
-        param("env.cat", "Wizard")
-    }
 
     vcs {
         root(DslContext.settingsRoot)
@@ -51,30 +45,34 @@ object BuildPlainDoll : BuildType({
 
     steps {
         maven {
+            name = "Build master"
 
             conditions {
-                doesNotContain("teamcity.build.branch", "master")
+                equals("teamcity.build.branch", "master")
+            }
+            goals = "clean deploy"
+            runnerArgs = "-Dmaven.test.failure.ignore=true"
+            userSettingsSelection = "settings.xml"
+        }
+        maven {
+            name = "Build other"
+
+            conditions {
+                doesNotExist("teamcity.build.branch")
             }
             goals = "clean test"
             runnerArgs = "-Dmaven.test.failure.ignore=true"
-        }
-        maven {
-            name = "Upload"
-
-            conditions {
-                contains("teamcity.build.branch", "master")
-            }
-            goals = "clean deploy"
-            userSettingsSelection = "settings.xml"
         }
     }
 
     triggers {
         vcs {
+            branchFilter = "+:/*"
         }
     }
 
-    requirements {
-        exists("python3.executable")
+    features {
+        perfmon {
+        }
     }
 })
