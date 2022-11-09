@@ -28,16 +28,13 @@ To debug in IntelliJ Idea, open the 'Maven Projects' tool window (View
 version = "2022.10"
 
 project {
-    description = "netology homeworks"
+    description = "Netology homeworks"
 
     buildType(Build)
 }
 
 object Build : BuildType({
     name = "Build"
-    description = "Build netology maven"
-
-    artifactRules = "target/*.jar => target"
 
     vcs {
         root(DslContext.settingsRoot)
@@ -45,7 +42,17 @@ object Build : BuildType({
 
     steps {
         maven {
-            name = "Build master"
+            name = "Maven test"
+
+            conditions {
+                doesNotEqual("teamcity.build.branch", "master")
+            }
+            goals = "clean test"
+            runnerArgs = "-Dmaven.test.failure.ignore=true"
+            userSettingsSelection = "settings.xml"
+        }
+        maven {
+            name = "Maven deploy"
 
             conditions {
                 equals("teamcity.build.branch", "master")
@@ -54,20 +61,10 @@ object Build : BuildType({
             runnerArgs = "-Dmaven.test.failure.ignore=true"
             userSettingsSelection = "settings.xml"
         }
-        maven {
-            name = "Build other"
-
-            conditions {
-                doesNotExist("teamcity.build.branch")
-            }
-            goals = "clean test"
-            runnerArgs = "-Dmaven.test.failure.ignore=true"
-        }
     }
 
     triggers {
         vcs {
-            branchFilter = "+:/*"
         }
     }
 
