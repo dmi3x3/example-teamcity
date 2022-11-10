@@ -60,7 +60,7 @@ object Build : BuildType({
                 equals("teamcity.build.branch", "master")
             }
             goals = "clean deploy"
-            runnerArgs = "-Dmaven.test.failure.ignore=true"
+            runnerArgs = "-Dmaven.test.failure.ignore=false"
             userSettingsSelection = "settings.xml"
         }
     }
